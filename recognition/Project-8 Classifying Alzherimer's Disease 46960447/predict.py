@@ -64,6 +64,10 @@ def main():
                     num_workers=args.num_workers, pin_memory=True)
 
     correct, total = 0, 0
+    class_correct = {c: 0 for c in classes}
+    class_total = {c: 0 for c in classes}
+
+    print("Running predictions...")
     for imgs, labels, paths in dl:
         imgs = imgs.to(device)
         labels = labels.to(device)
@@ -71,11 +75,24 @@ def main():
         preds = logits.argmax(dim=1)
         correct += (preds == labels).sum().item()
         total += labels.numel()
-        for p, y, yhat in zip(paths, labels.cpu().tolist(), preds.cpu().tolist()):
-            print(f"{p} | gt={classes[y]} pred={classes[yhat]}")
 
+        # Track per-class accuracy
+        for y, yhat in zip(labels.cpu().tolist(), preds.cpu().tolist()):
+            class_total[classes[y]] += 1
+            if y == yhat:
+                class_correct[classes[y]] += 1
+
+    print("\n" + "="*50)
+    print("PREDICTION RESULTS")
+    print("="*50)
     if total > 0:
-        print(f"Total accuracy on provided root: {correct/total:.4f}")
+        print(f"\nOverall Accuracy: {correct}/{total} = {correct/total:.4f} ({100*correct/total:.2f}%)")
+        print(f"\nPer-Class Accuracy:")
+        for cls in classes:
+            if class_total[cls] > 0:
+                acc = class_correct[cls] / class_total[cls]
+                print(f"  {cls}: {class_correct[cls]}/{class_total[cls]} = {acc:.4f} ({100*acc:.2f}%)")
+    print("="*50)
 
 if __name__ == "__main__":
     main()
