@@ -41,6 +41,8 @@ Structural MRI reveals characteristic brain atrophy patterns in Alzheimer's Dise
 
 Machine learning was used to find the signs of Alzheimers Disease.
 
+Claude was used to refine the Readme.md and produced a skeleton for the code written.
+
 ## ✨ Features
 
 ### Core Capabilities
@@ -77,7 +79,7 @@ Project-8 Classifying Alzheimer's Disease/
     ├── loss_curve.png       # Training/validation loss
     └── acc_curve.png        # Training/validation accuracy
 ```
-The project was structured
+
 ---
 
 ## 🚀 Installation
@@ -214,7 +216,7 @@ This uses sensible defaults:
 - Save to Drive to preserve checkpoints
 - Monitor GPU usage with `!nvidia-smi`
 
-Example:
+**Google Colab Mounting:**
 ```
 import torch
 
@@ -237,23 +239,22 @@ drive.mount('/content/drive')
 During training, you'll see:
 
 ```
-Found 11140 image files
+Found 21520 image files
 Using device: cuda
 
-Epoch 01/25 | train_loss=0.685 acc=0.52 | val_loss=0.678 acc=0.54
-Epoch 02/25 | train_loss=0.423 acc=0.74 | val_loss=0.456 acc=0.71
+Epoch 01/40 | train_loss=0.685 acc=0.6590  | val_loss=0.678 acc=0.8239
+Epoch 02/40 | train_loss=0.423 acc=0.8837  | val_loss=0.456 acc=0.9356
 ...
-Epoch 10/25 | train_loss=0.298 acc=0.83 | val_loss=0.334 acc=0.79
+Epoch 10/40 | train_loss=0.0298 acc=0.9908  | val_loss=0.0334 acc=0.9949
 Saved best checkpoint to ./runs_best/best.ckpt (val_acc=0.7900)
 ...
-Epoch 15/25 | train_loss=0.213 acc=0.88 | val_loss=0.267 acc=0.84
+Epoch 15/40 | train_loss=0.0213 acc=0.9945  | val_loss=0.0267 acc=0.9933
 Saved best checkpoint to ./runs_best/best.ckpt (val_acc=0.8400)
 ...
-Epoch 20/25 | train_loss=0.167 acc=0.91 | val_loss=0.234 acc=0.87
+Epoch 20/40 | train_loss=0.0167 acc=0.9944  | val_loss=0.0234 acc=0.9914
 Saved best checkpoint to ./runs_best/best.ckpt (val_acc=0.8700)
 ...
-Epoch 25/25 | train_loss=0.143 acc=0.93 | val_loss=0.223 acc=0.88
-
+Epoch 40/40 | train_loss=0.0143 acc=0.9961  | val_loss=0.0223 acc=0.9954
 Training complete. Curves saved to: ./runs_best
 ```
 
@@ -262,25 +263,6 @@ Training complete. Curves saved to: ./runs_best
 - `loss_curve.png`: Training/validation loss
 - `acc_curve.png`: Training/validation accuracy
 
-### Options
-
-python train.py \
-    --data_root /path/to/data \
-    --epochs 30 \
-    --batch_size 32 \
-    --lr 3e-4 \
-    --weight_decay 1e-4 \
-    --dropout 0.3 \
-    --freeze_backbone \
-    --val_ratio 0.2 \
-    --seed 1337 \
-    --num_workers 4 \
-    --outdir ./runs_experiment
-
- To adjust training length: Change --epochs
-   To prevent overfitting: Increase --dropout, add --freeze_backbone, increase --weight_decay
-   To speed up training: Increase --batch_size, add --freeze_backbone, increase --num_workers
-   To reduce GPU memory: Decrease --batch_size, add --freeze_backbone, set --num_workers 0
 
 ### Training Curves
 
@@ -330,20 +312,19 @@ Running the Prediction on Google Colab produced the following output.
 Using device: cuda
 Classes: ['NC', 'AD']
 Model config from checkpoint: dropout=0.3, freeze_backbone=False
-Found 2400 image files
-Running predictions on 2400 images...
-Predicting: 100%|██████████| 150/150 [00:45<00:00, 3.34it/s]
+Found 9000 image files
+Running predictions on 9000 images...
+Predicting: 100% 282/282 [00:50<00:00,  5.57it/s]
 
 ==================================================
 PREDICTION RESULTS
 ==================================================
 
-Overall Accuracy: 2040/2400 = 0.8500 (85.00%)
+Overall Accuracy: 7774/9000 = 0.8637 (86.37%)
 
 Per-Class Accuracy:
-  NC: 1020/1200 = 0.8500 (85.00%)
-  AD: 1020/1200 = 0.8500 (85.00%)
-==================================================
+  NC: 4368/4540 = 0.9621 (96.21%)
+  AD: 3406/4460 = 0.7636 (76.36%)
 ```
 
 ---
@@ -375,25 +356,6 @@ Input Image (224×224×3)
 - **Input Size**: 224×224 RGB
 - **Feature Dim**: 768
 
-### Classification Head
-
-**Without Dropout:**
-```
-Linear(768 → 2)
-```
-
-**With Dropout (recommended):**
-```
-Dropout(p=0.3) → Linear(768 → 2)
-```
-
-### Transfer Learning Modes
-
-| Mode | Trainable Params | Use Case | Training Speed |
-|------|-----------------|----------|----------------|
-| **Full Fine-tuning** | ~28M | Large datasets (>1000 images) | Slow |
-| **Frozen Backbone** | ~2K | Small datasets (<500 images) | Fast |
-
 ---
 
 ## 📈 Results
@@ -404,45 +366,13 @@ Dropout(p=0.3) → Linear(768 → 2)
 
 | Metric | Value |
 |--------|-------|
-| **Overall Accuracy** | 85-90% |
-| **NC Accuracy** | 83-88% |
-| **AD Accuracy** | 85-92% |
-| **Training Time** | 5-10 min/epoch (GPU) |
-| **Inference Speed** | 50-100 images/sec (GPU) |
+| **Overall Accuracy** | 86.37% |
+| **NC Accuracy** | 96.21% |
+| **AD Accuracy** | 76.36% |
+| **Training Time** | ~1 min/epoch (GPU) |
+| **Inference Speed** | ~100 images/sec (GPU) |
 
-### Training Statistics
 
-**Typical Training Progression:**
-
-| Epoch | Train Loss | Train Acc | Val Loss | Val Acc |
-|-------|-----------|-----------|----------|---------|
-| 1 | 0.685 | 0.52 | 0.678 | 0.54 |
-| 5 | 0.423 | 0.74 | 0.456 | 0.71 |
-| 10 | 0.298 | 0.83 | 0.334 | 0.79 |
-| 15 | 0.213 | 0.88 | 0.267 | 0.84 |
-| 20 | 0.167 | 0.91 | 0.234 | 0.87 |
-| 25 | 0.143 | 0.93 | 0.223 | 0.88 |
-
-### What Good Results Look Like
-
-✅ **Good Training (Target: 80%+ test accuracy):**
-- Validation accuracy: **0.82-0.90**
-- Val loss: **0.20-0.40**
-- Train-val gap: **< 0.10**
-- Both metrics improving steadily
-
-⚠️ **Overfitting Warning:**
-- Train acc: 0.95+ but Val acc: < 0.80
-- Train-val gap: > 0.20
-- Val loss increasing while train loss decreasing
-
-💡 **Fix overfitting:**
-- Increase `--dropout` to 0.5
-- Add `--weight_decay 1e-3`
-- Reduce `--epochs`
-- Use `--freeze_backbone`
-
----
 
 ## ⚙️ Hyperparameter Guide
 
@@ -462,54 +392,13 @@ Dropout(p=0.3) → Linear(768 → 2)
 | `--num_workers` | int | 4 | DataLoader worker processes |
 | `--outdir` | str | ./runs_adni_convnext | Output directory |
 
-### Recommended Settings by Scenario
+To adjust training length: Change --epochs
 
-#### 🎯 Target: 80%+ Accuracy (Balanced Dataset)
+To prevent overfitting: Increase --dropout, add --freeze_backbone, increase --weight_decay
 
-```bash
---epochs 30 \
---batch_size 32 \
---lr 3e-4 \
---dropout 0.3 \
---weight_decay 1e-4
-```
+To speed up training: Increase --batch_size, add --freeze_backbone, increase --num_workers
 
-#### 🚀 Small Dataset (< 500 per class)
-
-```bash
---freeze_backbone \
---epochs 20 \
---batch_size 16 \
---lr 1e-3 \
---dropout 0.5 \
---weight_decay 5e-4
-```
-
-#### ⚡ Large Dataset (> 1000 per class)
-
-```bash
---epochs 30 \
---batch_size 32 \
---lr 5e-4 \
---dropout 0.2 \
---weight_decay 1e-4
-```
-
-#### 💾 Limited GPU Memory
-
-```bash
---freeze_backbone \
---batch_size 8 \
---num_workers 0
-```
-
-### Learning Rate Guidelines
-
-| Dataset Size | Frozen Backbone | Full Fine-tuning |
-|--------------|-----------------|------------------|
-| Small (<500) | 1e-3 | 1e-4 |
-| Medium (500-1000) | 5e-4 | 3e-4 |
-| Large (>1000) | 1e-3 | 5e-4 |
+To reduce GPU memory: Decrease --batch_size, add --freeze_backbone, set --num_workers 0
 
 ### Dropout Guidelines
 
@@ -518,111 +407,6 @@ Dropout(p=0.3) → Linear(768 → 2)
 | No overfitting | 0.0 - 0.2 |
 | Slight overfitting | 0.3 - 0.4 |
 | Severe overfitting | 0.5 - 0.6 |
-
----
-
-## 🔧 Troubleshooting
-
-### Common Issues and Solutions
-
-#### ❌ CUDA Out of Memory
-
-**Error:**
-```
-RuntimeError: CUDA out of memory
-```
-
-**Solutions:**
-1. Reduce batch size: `--batch_size 8`
-2. Freeze backbone: `--freeze_backbone`
-3. Use fewer workers: `--num_workers 0`
-4. Clear cache before training:
-   ```python
-   import torch
-   torch.cuda.empty_cache()
-   ```
-
-#### ❌ Low Accuracy (< 70%)
-
-**Possible causes:**
-
-1. **Imbalanced dataset**
-   - Check class distribution
-   - Ensure NC ≈ AD in count
-
-2. **Insufficient training**
-   - Increase `--epochs` to 40-50
-   - Monitor validation curve
-
-3. **Learning rate issues**
-   - Try `--lr 1e-4` (lower) or `--lr 5e-4` (higher)
-
-4. **Data quality**
-   - Verify images are brain MRIs
-   - Check preprocessing consistency
-
-#### ❌ Model Not Learning (Accuracy Stuck)
-
-**Symptoms:**
-```
-Epoch 01/25 | acc=0.93 | val_acc=0.93
-Epoch 10/25 | acc=0.93 | val_acc=0.93  # Not changing!
-```
-
-**Cause:** Model predicting one class for everything
-
-**Solution:**
-- Check class balance with:
-  ```python
-  from dataset import find_image_files
-  items = find_image_files('/path/to/data')
-  nc = sum(1 for _, l in items if l == 0)
-  ad = sum(1 for _, l in items if l == 1)
-  print(f"NC: {nc}, AD: {ad}")
-  ```
-- Balance your dataset before training
-
-#### ❌ No Image Files Found
-
-**Error:**
-```
-SystemExit: No image files found under /path/to/data
-```
-
-**Solutions:**
-1. Check directory structure matches:
-   ```
-   data_root/
-   ├── NC/
-   └── AD/
-   ```
-
-2. Verify file extensions (`.jpg`, `.png`)
-
-3. Check for hidden folders or incorrect naming
-
-#### ❌ Checkpoint Loading Error
-
-**Error:**
-```
-RuntimeError: Error(s) in loading state_dict
-```
-
-**Cause:** Model architecture mismatch
-
-**Solution:** The updated `predict.py` now automatically loads the correct architecture from checkpoint. Make sure you're using the latest version.
-
-#### ❌ Training Too Slow
-
-**Solutions:**
-1. Increase batch size: `--batch_size 32`
-2. Use more workers: `--num_workers 4`
-3. Freeze backbone: `--freeze_backbone`
-4. Check GPU is being used:
-   ```python
-   import torch
-   print(torch.cuda.is_available())
-   ```
 
 ---
 
@@ -664,45 +448,6 @@ RuntimeError: Error(s) in loading state_dict
 
 ---
 
-## 🤝 Contributing
-
-This project is part of academic coursework. If you find bugs or have suggestions:
-
-1. Document the issue clearly
-2. Provide reproduction steps
-3. Include system information
-4. Share sample outputs/logs
-
----
-
-## 📖 Citation
-
-If you use this code in your research, please cite:
-
-```bibtex
-@misc{alzheimer-classification-2025,
-  title={Alzheimer's Disease Classification from Brain MRI Images using ConvNeXt},
-  author={COMP3710 Pattern Analysis and Recognition},
-  year={2025},
-  institution={University of Queensland},
-  note={Deep learning project for automated AD diagnosis}
-}
-```
-
-### References
-
-**ConvNeXt Architecture:**
-```bibtex
-@inproceedings{liu2022convnet,
-  title={A ConvNet for the 2020s},
-  author={Liu, Zhuang and Mao, Hanzi and Wu, Chao-Yuan and Feichtenhofer, Christoph and Darrell, Trevor and Xie, Saining},
-  booktitle={CVPR},
-  year={2022}
-}
-```
-
----
-
 ## 📄 License
 
 This project is part of the **COMP3710 Pattern Analysis and Recognition** coursework at the University of Queensland (2025).
@@ -718,14 +463,7 @@ This project is part of the **COMP3710 Pattern Analysis and Recognition** course
 - **ADNI Dataset** contributors (if applicable)
 - **Course Instructors** at UQ for guidance and support
 
----
 
-## 📞 Contact & Support
-
-**For Questions:**
-- Create an issue in the repository
-- Contact course instructors
-- Refer to PyTorch documentation
 
 **Quick Links:**
 - [PyTorch Documentation](https://pytorch.org/docs/)
@@ -734,6 +472,6 @@ This project is part of the **COMP3710 Pattern Analysis and Recognition** course
 
 ---
 
-**Built with ❤️ for advancing medical AI and early Alzheimer's detection**
+**Built for advancing medical AI and early Alzheimer's detection**
 
 *Last Updated: October 2025*

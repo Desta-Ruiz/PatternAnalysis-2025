@@ -202,10 +202,10 @@ def main():
                         help="Root directory with NC/ and AD/ subfolders containing images")
 
     # Training hyperparameters
-    parser.add_argument("--epochs", type=int, default=25,
-                        help="Number of training epochs (default: 25)")
+    parser.add_argument("--epochs", type=int, default=40,
+                        help="Number of training epochs (default: 40)")
     parser.add_argument("--batch_size", type=int, default=128,
-                        help="Batch size for training (default: 16)")
+                        help="Batch size for training (default: 128)")
     parser.add_argument("--lr", type=float, default=3e-4,
                         help="Learning rate (default: 3e-4)")
     parser.add_argument("--weight_decay", type=float, default=1e-4,
