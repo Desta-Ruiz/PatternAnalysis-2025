@@ -265,26 +265,8 @@ def main():
     # ConvNeXt-based model with optional frozen backbone
     model = ADNIConvNeXt(num_classes=2, freeze_backbone=args.freeze_backbone, dropout=args.dropout).to(device)
 
-    # Calculate class weights to handle imbalanced dataset
-    # Count samples per class
-    class_counts = [0, 0]
-    for _, label in train_items:
-        class_counts[label] += 1
-
-    # Calculate weights (inverse frequency)
-    total = sum(class_counts)
-    class_weights = torch.tensor([total / (len(class_counts) * count) for count in class_counts],
-                                  dtype=torch.float32).to(device)
-
-    # Optional: Boost minority class weight even more if needed
-    # Uncomment the line below if model still predicts majority class
-    # class_weights[1] *= 1.5  # Give AD class 50% more weight
-
-    print(f"Class distribution: NC={class_counts[0]}, AD={class_counts[1]}")
-    print(f"Class weights: NC={class_weights[0]:.4f}, AD={class_weights[1]:.4f}")
-
-    # Loss function with class weights to handle imbalance
-    criterion = nn.CrossEntropyLoss(weight=class_weights)
+    # Loss function for binary classification
+    criterion = nn.CrossEntropyLoss()
 
     # Optimizer (AdamW with weight decay for regularization)
     # Only optimize parameters that require gradients (important if backbone is frozen)
