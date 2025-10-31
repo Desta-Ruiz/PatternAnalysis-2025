@@ -44,8 +44,17 @@ def main():
     classes = ckpt.get("classes", CLASSES)  # Get class names from checkpoint
     print(f"Classes: {classes}")
 
-    # Initialize model with same architecture as training
-    model = ADNIConvNeXt(num_classes=len(classes))
+    # Get training arguments from checkpoint to recreate exact model architecture
+    train_args = ckpt.get("args", {})
+    dropout = train_args.get("dropout", 0.0)
+    freeze_backbone = train_args.get("freeze_backbone", False)
+
+    print(f"Model config from checkpoint: dropout={dropout}, freeze_backbone={freeze_backbone}")
+
+    # Initialize model with SAME architecture as training
+    model = ADNIConvNeXt(num_classes=len(classes),
+                         freeze_backbone=freeze_backbone,
+                         dropout=dropout)
 
     # Load trained weights
     model.load_state_dict(ckpt["model_state"], strict=True)
