@@ -2,6 +2,7 @@ import os
 import argparse
 import torch
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 from modules import ADNIConvNeXt
 from dataset import ADNIImageDataset, CLASSES, find_image_files
 
@@ -57,8 +58,8 @@ def main():
     class_correct = {c: 0 for c in classes}
     class_total = {c: 0 for c in classes}
 
-    print("Running predictions...")
-    for imgs, labels, paths in dl:
+    print(f"Running predictions on {len(items)} images...")
+    for imgs, labels, paths in tqdm(dl, desc="Predicting"):
         imgs = imgs.to(device)
         labels = labels.to(device)
         logits = model(imgs)
