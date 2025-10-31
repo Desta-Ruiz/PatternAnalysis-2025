@@ -1,8 +1,8 @@
-# Alzheimer's Disease Classification from MRI Scans
+# Alzheimer's Disease Classification from MRI Images
 
 ## Introduction
 
-This project implements a deep learning solution for classifying Alzheimer's Disease (AD) from 3D brain MRI scans. Using transfer learning with pretrained Convolutional Neural Networks, the system can distinguish between Normal Control (NC) subjects and patients with Alzheimer's Disease based on structural brain imaging data.
+This project implements a deep learning solution for classifying Alzheimer's Disease (AD) from brain MRI images. Using transfer learning with pretrained Convolutional Neural Networks, the system can distinguish between Normal Control (NC) subjects and patients with Alzheimer's Disease based on structural brain imaging data.
 
 ### Background
 
@@ -10,10 +10,9 @@ Alzheimer's Disease is a progressive neurodegenerative disorder that affects mil
 
 ### Key Features
 
-- **3D Medical Image Processing**: Handles NIfTI format brain MRI volumes
+- **2D Medical Image Classification**: Handles JPEG/PNG brain MRI slices
 - **Transfer Learning**: Uses pretrained ConvNeXt architecture with ImageNet weights
-- **Robust Preprocessing**: Percentile-based normalization to handle intensity variations
-- **Multiple Slice Strategies**: Center slice or three-slice RGB for richer spatial context
+- **Data Augmentation**: Random horizontal flip and rotation for improved generalization
 - **Stratified Cross-Validation**: Ensures balanced class representation during training
 - **Checkpoint Management**: Automatic model saving based on validation performance
 
@@ -34,8 +33,7 @@ Project-8 Classifying Alzherimer's Disease 46960447/
 ### Dependencies
 
 - Python 3.8+
-- PyTorch 1.12+ (with torchvision)
-- nibabel (NIfTI file format support)
+- PyTorch 2.0+ (with torchvision)
 - numpy
 - scikit-learn
 - matplotlib
@@ -58,22 +56,22 @@ conda activate alzheimer
 conda install pytorch torchvision pytorch-cuda=11.8 -c pytorch -c nvidia
 
 # Install other dependencies
-conda install nibabel scikit-learn matplotlib tqdm -c conda-forge
+conda install numpy scikit-learn matplotlib tqdm -c conda-forge
 ```
 
 ## Dataset Structure
 
-The expected dataset structure follows class-labeled folders containing NIfTI files:
+The expected dataset structure follows class-labeled folders containing image files (JPEG/PNG):
 
 ```
 dataset/
 ├── NC/                  # Normal Control subjects
-│   ├── subject001.nii.gz
-│   ├── subject002.nii.gz
+│   ├── subject001.jpg
+│   ├── subject002.jpg
 │   └── ...
 └── AD/                  # Alzheimer's Disease patients
-    ├── subject101.nii.gz
-    ├── subject102.nii.gz
+    ├── subject101.jpg
+    ├── subject102.jpg
     └── ...
 ```
 
@@ -87,6 +85,8 @@ dataset/
     ├── NC/
     └── AD/
 ```
+
+**Supported Image Formats**: `.jpg`, `.jpeg`, `.png` (case-insensitive)
 
 ## Usage
 
@@ -110,7 +110,6 @@ python train.py \
   --batch_size 16 \
   --lr 3e-4 \
   --weight_decay 1e-4 \
-  --slice_strategy three_slice_rgb \
   --val_ratio 0.2 \
   --dropout 0.3 \
   --freeze_backbone \
@@ -125,13 +124,12 @@ python train.py \
 - `--batch_size`: Batch size (default: 8)
 - `--lr`: Learning rate (default: 3e-4)
 - `--weight_decay`: Weight decay for AdamW optimizer (default: 1e-4)
-- `--slice_strategy`: Slice extraction method - `center` or `three_slice_rgb` (default: center)
 - `--val_ratio`: Validation split ratio (default: 0.2)
 - `--dropout`: Dropout rate before final layer (default: 0.0)
 - `--freeze_backbone`: Freeze pretrained backbone layers
 - `--seed`: Random seed for reproducibility (default: 1337)
 - `--num_workers`: DataLoader worker processes (default: 2)
-- `--outdir`: Output directory for checkpoints and logs (default: ./runs)
+- `--outdir`: Output directory for checkpoints and logs (default: ./runs_adni_convnext)
 
 ### Running Inference
 
@@ -140,15 +138,14 @@ Predict on test data:
 python predict.py \
   --data_root /path/to/test_data \
   --ckpt ./runs_alzheimer/best.ckpt \
-  --slice_strategy center \
   --batch_size 8
 ```
 
 The script automatically:
 - Detects train/test split structure if present
 - Loads the trained model from checkpoint
-- Generates predictions with confidence scores
-- Calculates accuracy metrics if ground truth labels are available
+- Generates predictions with class labels
+- Calculates overall and per-class accuracy metrics
 
 ## Model Architecture
 
@@ -175,27 +172,20 @@ Two training modes:
 
 ## Preprocessing Pipeline
 
-### Slice Extraction
+### Image Loading
 
-**Center Slice Strategy**:
-- Extracts middle axial slice from 3D volume
-- Single 2D slice → replicated to 3 channels (grayscale → RGB)
-
-**Three-Slice RGB Strategy**:
-- Extracts 3 adjacent slices around center
-- Stacks as RGB channels for richer spatial context
-- Better captures 3D structural information
+- Loads JPEG/PNG images and converts to RGB format
+- Handles both grayscale and color images automatically
+- Resize to 224×224 for pretrained model compatibility
 
 ### Normalization
 
-1. **Intensity Normalization**: Percentile-based (1st-99th percentile) to handle outliers
-2. **ImageNet Normalization**: mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+**ImageNet Normalization**: mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
 
 ### Data Augmentation (Training Only)
 
 - Random horizontal flip (p=0.5)
 - Random rotation (±10 degrees)
-- Resize to 224×224
 
 ## Results
 
@@ -208,7 +198,7 @@ Model performance depends on dataset size and quality. Typical results on ADNI-l
 Performance tips:
 - Larger datasets benefit from fine-tuning the full model
 - Small datasets (<500 samples) work better with frozen backbones
-- Three-slice RGB strategy generally improves accuracy by 2-5%
+- Increase epochs (50-100) for better convergence on small datasets
 
 ## Checkpoints
 
@@ -226,14 +216,15 @@ Saved checkpoints (`best.ckpt`) contain:
 - Use `--freeze_backbone` to reduce memory footprint
 
 **Low Accuracy**:
-- Try `--slice_strategy three_slice_rgb` for better spatial context
 - Increase `--epochs` (50-100 for small datasets)
 - Adjust `--lr` (try 1e-4 or 1e-3)
 - Add `--dropout 0.3` to reduce overfitting
+- Ensure images are properly preprocessed and centered
 
-**Corrupted NIfTI Files**:
-- The dataset loader automatically skips files with NaN or Inf values
-- Check console output for warnings about skipped files
+**No Files Found**:
+- Check dataset structure matches `{class_name}/**/*.{jpg,jpeg,png}`
+- Verify class names match NC and AD
+- Ensure image file extensions are correct
 
 ## Citation
 

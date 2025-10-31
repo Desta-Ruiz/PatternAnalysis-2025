@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 from modules import ADNIConvNeXt
-from dataset import find_nii_files, find_image_files, ADNISliceDataset, ADNIImageDataset, CLASSES
+from dataset import find_image_files, ADNIImageDataset, CLASSES
 
 def set_seed(seed: int = 1337):
     random.seed(seed)
@@ -87,7 +87,6 @@ def main():
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--lr", type=float, default=3e-4)
     parser.add_argument("--weight_decay", type=float, default=1e-4)
-    parser.add_argument("--slice_strategy", type=str, default="center", choices=["center","three_slice_rgb"])
     parser.add_argument("--freeze_backbone", action="store_true")
     parser.add_argument("--dropout", type=float, default=0.0)
     parser.add_argument("--val_ratio", type=float, default=0.2)
@@ -100,28 +99,20 @@ def main():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     os.makedirs(args.outdir, exist_ok=True)
 
-    # Try to find image files first (JPEG/PNG), fall back to NIfTI
+    # Find image files (JPEG/PNG)
     items = find_image_files(args.data_root)
-    use_images = len(items) > 0
+    if len(items) == 0:
+        raise SystemExit(f"No image files found under {args.data_root}. Expected folders: {CLASSES}.")
 
-    if not use_images:
-        items = find_nii_files(args.data_root)
-        if len(items) == 0:
-            raise SystemExit(f"No image or NIfTI files found under {args.data_root}. Expected folders: {CLASSES}.")
-
-    print(f"Found {len(items)} {'image' if use_images else 'NIfTI'} files")
+    print(f"Found {len(items)} image files")
     print(f"Using device: {device}")
 
     train_idx, val_idx = split_train_val(items, val_ratio=args.val_ratio, seed=args.seed)
     train_items = [items[i] for i in train_idx]
     val_items = [items[i] for i in val_idx]
 
-    if use_images:
-        ds_train = ADNIImageDataset(train_items, train=True, augment=True)
-        ds_val   = ADNIImageDataset(val_items, train=False, augment=False)
-    else:
-        ds_train = ADNISliceDataset(train_items, slice_strategy=args.slice_strategy, train=True, augment=True)
-        ds_val   = ADNISliceDataset(val_items, slice_strategy=args.slice_strategy, train=False, augment=False)
+    ds_train = ADNIImageDataset(train_items, train=True, augment=True)
+    ds_val   = ADNIImageDataset(val_items, train=False, augment=False)
 
     dl_train = DataLoader(ds_train, batch_size=args.batch_size, shuffle=True,
                           num_workers=args.num_workers, pin_memory=True)
