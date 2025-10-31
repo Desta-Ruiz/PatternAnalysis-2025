@@ -21,7 +21,6 @@
 - [Hyperparameter Guide](#hyperparameter-guide)
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
-- [Citation](#citation)
 
 ---
 
@@ -381,8 +380,8 @@ Input Image (224×224×3)
 | Argument | Type | Default | Description |
 |----------|------|---------|-------------|
 | `--data_root` | str | *required* | Path to dataset directory |
-| `--epochs` | int | 25 | Number of training epochs |
-| `--batch_size` | int | 16 | Batch size for training |
+| `--epochs` | int | 40 | Number of training epochs |
+| `--batch_size` | int | 128 | Batch size for training |
 | `--lr` | float | 3e-4 | Learning rate |
 | `--weight_decay` | float | 1e-4 | L2 regularization strength |
 | `--dropout` | float | 0.3 | Dropout rate before final layer |
