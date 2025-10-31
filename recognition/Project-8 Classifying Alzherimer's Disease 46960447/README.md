@@ -39,36 +39,23 @@ Structural MRI reveals characteristic brain atrophy patterns in Alzheimer's Dise
 - Entorhinal cortex
 - Temporal lobes
 
-Our system leverages **transfer learning** with pretrained ConvNeXt models to automatically identify these patterns from 2D brain MRI slices.
-
-### Key Achievements
-
-- ✅ **80-90% classification accuracy** on balanced datasets
-- ✅ **Fast training**: ~5-10 minutes per epoch on GPU
-- ✅ **Flexible deployment**: Works on local machines and Google Colab
-- ✅ **Production-ready**: Complete pipeline from training to inference
-
----
+Machine learning was used to find the signs of Alzheimers Disease.
 
 ## ✨ Features
 
 ### Core Capabilities
 
-- 🧠 **Medical Image Classification**: Handles JPEG/PNG brain MRI slices
-- 🔄 **Transfer Learning**: Pretrained ConvNeXt-Tiny with ImageNet weights
-- 📊 **Data Augmentation**: Random flips and rotations for robustness
-- 🎯 **Stratified Validation**: Balanced class representation
-- 💾 **Auto Checkpointing**: Saves best models automatically
-- 📈 **Training Visualization**: Loss and accuracy curves
+The system handles medical brain MRI images in standard JPEG and PNG formats, leveraging transfer learning with a pretrained
+ConvNeXt-Tiny neural network originally trained on ImageNet. During training, the model applies data augmentation techniques such as
+random image flips and rotations to improve its ability to generalize to new data. A stratified validation approach ensures balanced
+representation of both healthy and Alzheimer's disease cases. The pipeline automatically saves checkpoints of the best-performing
+model and generates visual training curves to track loss and accuracy metrics over time.
 
 ### Technical Features
 
-- **GPU Acceleration**: CUDA support for fast training
-- **Mixed Precision Training**: Efficient memory usage
-- **Configurable Architecture**: Freeze/unfreeze backbone
-- **Dropout Regularization**: Prevent overfitting
-- **Comprehensive Logging**: Track all metrics
-- **Progress Bars**: Real-time training feedback
+Technical capabilities include GPU acceleration with CUDA support, mixed precision training for efficient memory usage, and a
+configurable architecture that allows freezing or unfreezing the backbone. The system incorporates dropout regularization to prevent
+overfitting, comprehensive metric logging, and real-time progress bars for immediate training feedback.
 
 ---
 
@@ -85,15 +72,12 @@ Project-8 Classifying Alzheimer's Disease/
 ├── modules.py                # Model architecture (ADNIConvNeXt)
 ├── dataset.py                # Data loading and preprocessing
 │
-├── acc_curve.png            # Sample accuracy curve
-├── loss_curve.png           # Sample loss curve
-│
-└── runs_*/                   # Training output directories
+└── runs_best/                   # Training output directories
     ├── best.ckpt            # Best model checkpoint
     ├── loss_curve.png       # Training/validation loss
     └── acc_curve.png        # Training/validation accuracy
 ```
-
+The project was structured
 ---
 
 ## 🚀 Installation
@@ -128,28 +112,27 @@ conda activate alzheimer
 # For CUDA 11.8:
 conda install pytorch torchvision pytorch-cuda=11.8 -c pytorch -c nvidia
 
-# For CUDA 12.1:
-conda install pytorch torchvision pytorch-cuda=12.1 -c pytorch -c nvidia
-
-# For CPU only:
-conda install pytorch torchvision cpuonly -c pytorch
-
 # Install other dependencies
-pip install scikit-learn matplotlib tqdm pillow
+pip install -r requirements.txt
 ```
 
 **Option 3: Google Colab**
 
 ```python
-# In a Colab notebook cell:
-!pip install torch torchvision scikit-learn matplotlib tqdm
-
 # Clone your repository
 !git clone https://github.com/your-repo/alzheimer-classification.git
 %cd alzheimer-classification
+
+
+# In a Colab notebook cell:
+!pip install -r requirements.txt
+!pip install torch torchvision
 ```
 
+
 ### Verify Installation
+
+To Verify that the installation was correct we can run the following code
 
 ```python
 import torch
@@ -161,6 +144,18 @@ print(f"CUDA version: {torch.version.cuda if torch.cuda.is_available() else 'N/A
 ---
 
 ## 📊 Dataset Setup
+
+The dataset was copied from the Rangpur Path: '/home/groups/comp3710/ADNI'
+
+Possible options are SCP or WinScp
+For SCP an example would be Scp <Source:Directory> <Destination>
+
+To efficiently download the data, you should zip the file and then download.
+This will allow you to easily move the dataset to where you need it.
+
+For Google Colab, you want to upload a zip file of the dataset to the google drive
+you can then go to google colab terminal and unzip the file
+
 
 ### Expected Directory Structure
 
@@ -183,32 +178,6 @@ dataset_root/
     └── AD/
         └── ...
 ```
-
-### Supported Image Formats
-
-- ✅ JPEG (`.jpg`, `.jpeg`)
-- ✅ PNG (`.png`)
-- ✅ Both grayscale and RGB images
-- ✅ Case-insensitive extensions
-
-### Dataset Requirements
-
-**Minimum for Training:**
-- 200+ images per class (400 total)
-- Balanced classes (equal NC and AD samples)
-
-**Recommended for Best Results:**
-- 500+ images per class (1000 total)
-- 80/20 train/validation split (automatic)
-- High-quality, preprocessed MRI slices
-
-### Data Preprocessing Tips
-
-1. **Image Quality**: Ensure MRI slices are properly skull-stripped
-2. **Centering**: Images should be centered on brain regions
-3. **Consistency**: Use same slice orientation across dataset
-4. **Balance**: Keep NC and AD counts similar (within 10%)
-
 ---
 
 ## 💻 Usage
@@ -225,60 +194,43 @@ python train.py \
 
 This uses sensible defaults:
 - 25 epochs
-- Batch size: 16
+- Batch size: 128
 - Learning rate: 3e-4
 - Dropout: 0.3
 - Full model fine-tuning
 
-#### Advanced Training (Recommended for 80%+ Accuracy)
-
-```bash
-python train.py \
-  --data_root /path/to/dataset/train \
-  --epochs 30 \
-  --batch_size 32 \
-  --lr 3e-4 \
-  --weight_decay 1e-4 \
-  --dropout 0.3 \
-  --num_workers 4 \
-  --outdir ./runs_best
-```
-
-#### Training with Frozen Backbone (Small Datasets)
-
-```bash
-python train.py \
-  --data_root /path/to/dataset/train \
-  --freeze_backbone \
-  --epochs 20 \
-  --batch_size 16 \
-  --lr 1e-3 \
-  --dropout 0.5 \
-  --outdir ./runs_frozen
-```
-
-**When to freeze backbone:**
-- Dataset < 500 images per class
-- Limited GPU memory
-- Quick experimentation
-- Prevent overfitting
 
 #### Google Colab Training
 
 ```bash
 !python train.py \
   --data_root /content/drive/MyDrive/ADNI/train \
-  --epochs 25 \
-  --batch_size 32 \
-  --num_workers 4 \
   --outdir /content/drive/MyDrive/runs_colab
 ```
 
-**Colab Tips:**
+**Google Colab Tips:**
 - Mount Google Drive first
 - Use `num_workers=4` for faster data loading
 - Save to Drive to preserve checkpoints
 - Monitor GPU usage with `!nvidia-smi`
+
+Example:
+```
+import torch
+
+# clone repo
+!git clone https://github.com/Desta-Ruiz/PatternAnalysis-2025.git
+%cd PatternAnalysis-2025/
+!git checkout topic-recognition
+%cd "recognition/Project-8 Classifying Alzherimer's Disease 46960447"/
+
+# Mount Drive
+from google.colab import drive
+drive.mount('/content/drive')
+
+# Install dependencies
+!pip install -r requirements.txt
+```
 
 ### Training Output
 
@@ -289,13 +241,17 @@ Found 11140 image files
 Using device: cuda
 
 Epoch 01/25 | train_loss=0.685 acc=0.52 | val_loss=0.678 acc=0.54
-Epoch 05/25 | train_loss=0.423 acc=0.74 | val_loss=0.456 acc=0.71
+Epoch 02/25 | train_loss=0.423 acc=0.74 | val_loss=0.456 acc=0.71
+...
 Epoch 10/25 | train_loss=0.298 acc=0.83 | val_loss=0.334 acc=0.79
 Saved best checkpoint to ./runs_best/best.ckpt (val_acc=0.7900)
+...
 Epoch 15/25 | train_loss=0.213 acc=0.88 | val_loss=0.267 acc=0.84
 Saved best checkpoint to ./runs_best/best.ckpt (val_acc=0.8400)
+...
 Epoch 20/25 | train_loss=0.167 acc=0.91 | val_loss=0.234 acc=0.87
 Saved best checkpoint to ./runs_best/best.ckpt (val_acc=0.8700)
+...
 Epoch 25/25 | train_loss=0.143 acc=0.93 | val_loss=0.223 acc=0.88
 
 Training complete. Curves saved to: ./runs_best
@@ -306,19 +262,46 @@ Training complete. Curves saved to: ./runs_best
 - `loss_curve.png`: Training/validation loss
 - `acc_curve.png`: Training/validation accuracy
 
-### Sample Training Curves
+### Options
+
+python train.py \
+    --data_root /path/to/data \
+    --epochs 30 \
+    --batch_size 32 \
+    --lr 3e-4 \
+    --weight_decay 1e-4 \
+    --dropout 0.3 \
+    --freeze_backbone \
+    --val_ratio 0.2 \
+    --seed 1337 \
+    --num_workers 4 \
+    --outdir ./runs_experiment
+
+ To adjust training length: Change --epochs
+   To prevent overfitting: Increase --dropout, add --freeze_backbone, increase --weight_decay
+   To speed up training: Increase --batch_size, add --freeze_backbone, increase --num_workers
+   To reduce GPU memory: Decrease --batch_size, add --freeze_backbone, set --num_workers 0
+
+### Training Curves
 
 **Loss Curve:**
 
 ![Loss Curve](loss_curve.png)
 
-*Training and validation loss over epochs. Lower is better. Gap indicates potential overfitting.*
+*The loss curve shows cross-entropy loss values for training and validation sets across epochs. Loss quantifies how far the model's
+predictions are from the true labels—lower values indicate better performance. Both curves should decrease steadily during healthy
+training. A widening gap between training and validation loss (> 0.2) signals overfitting, meaning the model is memorizing training
+examples rather than learning to generalize. The goal is to minimize validation loss while keeping both curves close together.*
 
 **Accuracy Curve:**
 
 ![Accuracy Curve](acc_curve.png)
 
-*Training and validation accuracy over epochs. Higher is better. Aim for val_acc > 0.80.*
+  *The accuracy curve displays the percentage of correctly classified MRI scans for both training and validation datasets over epochs.
+  Higher values are better, with 1.0 representing perfect classification. Validation accuracy is the primary metric for assessing model
+  quality since it reflects performance on unseen patient data. For Alzheimer's Disease classification, validation accuracy above 0.80
+  (80%) indicates clinically useful diagnostic capability. If validation accuracy stops improving or decreases while training accuracy
+  continues rising, this indicates overfitting and may require adjustments like increased dropout or early stopping.*
 
 ---
 
@@ -332,16 +315,6 @@ python predict.py \
   --ckpt ./runs_best/best.ckpt
 ```
 
-#### With Custom Batch Size
-
-```bash
-python predict.py \
-  --data_root /path/to/dataset/test \
-  --ckpt ./runs_best/best.ckpt \
-  --batch_size 16 \
-  --num_workers 4
-```
-
 #### Google Colab Inference
 
 ```bash
@@ -351,6 +324,7 @@ python predict.py \
 ```
 
 ### Prediction Output
+Running the Prediction on Google Colab produced the following output.
 
 ```
 Using device: cuda

@@ -204,7 +204,7 @@ def main():
     # Training hyperparameters
     parser.add_argument("--epochs", type=int, default=25,
                         help="Number of training epochs (default: 25)")
-    parser.add_argument("--batch_size", type=int, default=16,
+    parser.add_argument("--batch_size", type=int, default=128,
                         help="Batch size for training (default: 16)")
     parser.add_argument("--lr", type=float, default=3e-4,
                         help="Learning rate (default: 3e-4)")
